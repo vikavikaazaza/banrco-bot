@@ -56,7 +56,7 @@ DB_PATH = (
 ).resolve()
 
 HOST = os.getenv("DASHBOARD_HOST", "127.0.0.1")
-PORT = int(os.getenv("DASHBOARD_PORT", "8000"))
+PORT = int(os.getenv("DASHBOARD_PORT", "8001"))
 
 if not BOT_TOKEN or BOT_TOKEN == "PASTE_TELEGRAM_BOT_TOKEN_HERE":
     raise RuntimeError("Заполните BOT_TOKEN в файле .env")
@@ -1039,7 +1039,15 @@ async def run_server():
         log_level="info",
     )
 
-    await uvicorn.Server(config).serve()
+    try:
+        await uvicorn.Server(config).serve()
+    except (SystemExit, OSError) as error:
+        # Если порт занят (например, хостингом), дашборд просто
+        # не запускается, а бот продолжает работать.
+        print(
+            f"CRM-дашборд не запущен на {HOST}:{PORT}: {error!r}. "
+            "Бот продолжает работу."
+        )
 
 
 async def main():
